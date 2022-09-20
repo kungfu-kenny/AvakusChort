@@ -4,6 +4,8 @@ from scrapy import (
 )
 from utils.selenium_webdriver import (
     Driver,
+    EC,
+    WebDriverWait,
 )
 from avakus.items import (
     ReviewItem, 
@@ -50,7 +52,7 @@ class VivinoListing(Spider):
 
     @staticmethod
     def _get_review_product_year(name:str, text:str) -> int:
-        return int(text.split(name)[-1].strip())
+        return int(i) if (i:=text.split(name)[-1].strip()) and not any(f.isalpha() for f in i) else None
 
     @staticmethod
     def _get_review_product_price(price:str) -> float:
@@ -70,10 +72,10 @@ class VivinoListing(Spider):
         return curr[0].text.strip()
 
     @staticmethod
-    def _develop_all_records(driver:object) -> None:
+    def _develop_all_records(driver:object, btn_class:str) -> None:
         while True:
             divs = driver.find_elements("css selector", "div.show-more")
-            if divs and (click:=divs[0].find_element("css selector", "button#btn-more-activities")):
+            if divs and (click:=divs[0].find_element("css selector", btn_class)) and click.size.get("height") > 0:
                 click.click()
                 driver.implicitly_wait(1)
             else:
@@ -82,15 +84,24 @@ class VivinoListing(Spider):
 
     def parse(self, response, url_type:str):
         with Driver(url=response.url) as driver:
-            #TODO check later
-            self._develop_all_records(driver)
-
             if url_type == 'review':
-                reviews = driver.find_elements(
-                    "css selector", 
-                    "div.user-activity-item"
+                self._develop_all_records(
+                    driver,
+                    "button#btn-more-activities"
+                )
+                reviews = WebDriverWait(driver, 100).until(
+                    EC.presence_of_all_elements_located(
+                        (
+                            "css selector", 
+                            "div.user-activity-item"
+                        )
+                    )
                 )
             elif url_type == 'wishlist':
+                self._develop_all_records(
+                    driver,
+                    "button.btn.btn-default.btn-md.btn-distinct.btn-flow"
+                )
                 reviews = driver.find_elements(
                     "css selector", 
                     "div.activity-wine-card.activity-section.clearfix"
@@ -108,12 +119,17 @@ class VivinoListing(Spider):
                     review.find_element("css selector", "p.wine-name").text
                 )
                 
-                review_product_region, review_product_country = [
+                region_country = [
                     self._get_review_link(i)
                     for i in review.find_elements("css selector", "div.wine-info > div.text-mini > a")
                 ]
-                review_product_region_link, review_product_region_name = review_product_region
-                review_product_country_link, review_product_country_name = review_product_country
+                if region_country:
+                    review_product_region, review_product_country = region_country
+                    review_product_region_link, review_product_region_name = review_product_region
+                    review_product_country_link, review_product_country_name = review_product_country
+                else:
+                    review_product_region_link, review_product_region_name = None, None
+                    review_product_country_link, review_product_country_name = None, None
 
                 review_product_price = self._get_review_product_price(
                     review.find_element(
@@ -135,6 +151,7 @@ class VivinoListing(Spider):
                             "div.activity-wine-card.activity-section.clearfix"
                         ).get_attribute("data-vintage-id")
                     )
+                    review_datetime = review.find_element("css selector", "a.link-muted.bold.inflate").get_attribute("title")
                     review_likes = int(
                         review.get_attribute("data-likes-count")
                     )
@@ -150,6 +167,7 @@ class VivinoListing(Spider):
                     )
                     yield ReviewItem(
                         review_id = review_id,
+                        review_datetime=review_datetime,
                         likes = review_likes,
                         text = review_text,
                         score = review_score,

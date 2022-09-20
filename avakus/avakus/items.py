@@ -40,6 +40,7 @@ class ReviewItem(scrapy.Item):
     name = 'review_item'
     file_path = FOLDER + 'reviews.json'
     review_id = scrapy.Field()
+    review_datetime = scrapy.Field()
     likes = scrapy.Field()
     text = scrapy.Field()
     score = scrapy.Field()
