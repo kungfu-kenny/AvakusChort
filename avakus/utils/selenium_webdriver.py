@@ -12,7 +12,7 @@ from contextlib import contextmanager
 @contextmanager
 def Driver(url: str):
     options = Options()
-    # options.headless = True
+    options.headless = True
     seleniumLogger.setLevel(logging.WARNING)
     driver = webdriver.Firefox(
         options=options,
