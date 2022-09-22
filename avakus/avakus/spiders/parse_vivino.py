@@ -33,7 +33,7 @@ class VivinoListing(Spider):
             yield Request(
                 url=url,
                 method="GET",
-                callback=self.parse,
+                callback=self.parse_alternative,
                 cb_kwargs={
                     "url_type": url_type,
                 }
