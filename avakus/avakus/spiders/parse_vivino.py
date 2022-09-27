@@ -2,6 +2,7 @@ from scrapy import (
     Spider,
     Request,
 )
+from time import sleep
 from utils.selenium_webdriver import (
     Driver,
     EC,
@@ -33,7 +34,7 @@ class VivinoListing(Spider):
             yield Request(
                 url=url,
                 method="GET",
-                callback=self.parse_alternative,
+                callback=self.parse,
                 cb_kwargs={
                     "url_type": url_type,
                 }
@@ -74,10 +75,11 @@ class VivinoListing(Spider):
     @staticmethod
     def _develop_all_records(driver:object, btn_class:str) -> None:
         while True:
+            driver.implicitly_wait(2.5)
             divs = driver.find_elements("css selector", "div.show-more")
             if divs and (click:=divs[0].find_element("css selector", btn_class)) and click.size.get("height") > 0:
                 click.click()
-                driver.implicitly_wait(1.5)
+                sleep(1)
             else:
                 break
         return None
@@ -141,7 +143,7 @@ class VivinoListing(Spider):
                                 "div.wine-info > div.text-mini > a"
                             )
                         ]
-                        if region_country:
+                        if region_country and len(region_country) == 2:
                             review_product_region, review_product_country = region_country
                             review_product_region_link, review_product_region_name = review_product_region
                             review_product_country_link, review_product_country_name = review_product_country
@@ -169,7 +171,7 @@ class VivinoListing(Spider):
                                     "div.activity-wine-card.activity-section.clearfix"
                                 ).get_attribute("data-vintage-id")    
                             )
-                            review_datetime = self._load_element(driver, "a.link-muted.bold.inflate")
+                            review_datetime = self._load_element(driver, "a.link-muted.bold.inflate").get_attribute("title")
                             review_likes = int(
                                 review.get_attribute("data-likes-count")
                             )
@@ -253,28 +255,35 @@ class VivinoListing(Spider):
                     driver,
                     "button.btn.btn-default.btn-md.btn-distinct.btn-flow"
                 )
-                reviews = driver.find_elements(
-                    "css selector", 
-                    "div.activity-wine-card.activity-section.clearfix"
+                reviews = WebDriverWait(driver, 100).until(
+                    EC.presence_of_all_elements_located(
+                        (
+                            "css selector", 
+                            "div.activity-wine-card.activity-section.clearfix"
+                        )
+                    )
                 )
-            
+                
             for review in reviews:
                 review_developer_link, review_developer_name = self._get_review_link(
-                    review.find_element("css selector", "span.text-small > a.link-muted")
+                    self._load_element(driver, "span.text-small > a.link-muted")
                 )
                 review_product_link, review_product = self._get_review_link(
-                    review.find_element("css selector", "p.wine-name > a.link-muted.bold")
+                    self._load_element(driver, "p.wine-name > a.link-muted.bold")
                 )
                 review_product_year = self._get_review_product_year(
                     review_product, 
-                    review.find_element("css selector", "p.wine-name").text
+                    self._load_element(driver, "p.wine-name").text
                 )
                 
                 region_country = [
                     self._get_review_link(i)
-                    for i in review.find_elements("css selector", "div.wine-info > div.text-mini > a")
+                    for i in self._load_elements(
+                        driver, 
+                        "div.wine-info > div.text-mini > a"
+                    )
                 ]
-                if region_country:
+                if region_country and len(region_country) == 2:
                     review_product_region, review_product_country = region_country
                     review_product_region_link, review_product_region_name = review_product_region
                     review_product_country_link, review_product_country_name = review_product_country
@@ -283,39 +292,44 @@ class VivinoListing(Spider):
                     review_product_country_link, review_product_country_name = None, None
 
                 review_product_price = self._get_review_product_price(
-                    review.find_element(
-                        "css selector", 
+                    self._load_element(
+                        driver, 
                         "span.header-large.text-block.wine-info-value.wine-price-value"
                     ).text
                 )
                 review_product_price_currency = self._get_review_product_currency(
-                    review.find_elements(
-                        "css selector", 
+                    self._load_elements(
+                        driver, 
                         "span.text-block.text-micro.wine-price-currency"
                     )
                 )
 
                 if url_type == "review":
                     review_product_id = int(
-                        review.find_element(
-                            "css selector", 
+                        self._load_element(
+                            driver,
                             "div.activity-wine-card.activity-section.clearfix"
-                        ).get_attribute("data-vintage-id")
+                        ).get_attribute("data-vintage-id")    
                     )
-                    review_datetime = review.find_element("css selector", "a.link-muted.bold.inflate").get_attribute("title")
+                    review_datetime = self._load_element(driver, "a.link-muted.bold.inflate").get_attribute("title")
                     review_likes = int(
                         review.get_attribute("data-likes-count")
                     )
                     review_id = int(
                         review.get_attribute("data-id")
                     )
-                    review_text = review.find_element("css selector", "p.tasting-note.text-larger").text
+                    review_text = self._load_element(driver, "p.tasting-note.text-larger").text
+                    
                     review_score = self._get_review_number(
                         [
                             i.get_attribute("class") for i in 
-                            review.find_elements("css selector", "span.rating.rating-xs.text-inline-block > i")
+                            self._load_elements(
+                                driver, 
+                                "span.rating.rating-xs.text-inline-block > i"
+                            )
                         ]
                     )
+
                     yield ReviewItem(
                         review_id = review_id,
                         review_datetime=review_datetime,
