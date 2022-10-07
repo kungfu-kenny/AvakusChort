@@ -8,6 +8,7 @@
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 BOT_NAME = 'avakus'
+LOG_LEVEL = 'INFO' 
 
 SPIDER_MODULES = ['avakus.spiders']
 NEWSPIDER_MODULE = 'avakus.spiders'

@@ -15,9 +15,18 @@ def run_scraping(
 
 def main():
     configure_logging()
+    settings = get_project_settings()
+    settings.update(
+        {
+            "CONCURRENT_REQUESTS": 1,
+            "CONCURRENT_REQUESTS_PER_IP": 1,
+        }
+    )
     try:
         run_scraping(
-            runner=CrawlerRunner(get_project_settings()),
+            runner=CrawlerRunner(
+                settings
+            ),
         )
         reactor.run()
     except Exception as ex:
