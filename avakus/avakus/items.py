@@ -46,6 +46,55 @@ def get_cmp_ids(file_path:str) -> list:
     return ids
 
 
+class TweetItem(scrapy.Item):
+    name = 'tweet_item'
+    file_path = FOLDER + 'tweets.json'
+    post_id = scrapy.Field()
+    post_link = scrapy.Field()
+    post_time = scrapy.Field()
+    post_comment_count = scrapy.Field()
+    post_retweet_count = scrapy.Field()
+    post_like_count = scrapy.Field()
+    post_quote_count = scrapy.Field()
+    post_watch_count = scrapy.Field()
+    post_text = scrapy.Field()
+
+    def process_item(self):
+        dct = dict(self)
+        if not get_cmp_id(
+            TweetItem.file_path, 
+            'post_id', 
+            dct["post_id"]
+        ):
+            write_json(
+                TweetItem.file_path, 
+                dct
+            )
+
+class TweetProfileItem(scrapy.Item):
+    name = 'tweet_profile_item'
+    file_path = FOLDER + 'tweets_profile.json'
+    profile_name = scrapy.Field()
+    profile_link = scrapy.Field()
+    profile_username = scrapy.Field()
+    profile_description = scrapy.Field()
+    profile_location = scrapy.Field()
+    profile_website = scrapy.Field()
+    profile_joindate = scrapy.Field()
+    profile_tweets = scrapy.Field()
+    profile_following = scrapy.Field()
+    profile_followers = scrapy.Field()
+    profile_likes = scrapy.Field()
+    profile_image_stats = scrapy.Field()
+    profile_datetime_check = scrapy.Field()
+
+    def process_item(self):
+        dct = dict(self)
+        write_json(
+            TweetProfileItem.file_path, 
+            dct
+        )
+
 class ReviewItem(scrapy.Item):
     name = 'review_item'
     file_path = FOLDER + 'reviews.json'

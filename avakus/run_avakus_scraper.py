@@ -8,7 +8,13 @@ from scrapy.utils.project import get_project_settings
 def run_scraping(
     runner: CrawlerRunner,
 ):
-    yield runner.crawl('vivino_listing')
+    #1. Tweets and statistics
+    yield runner.crawl("parse_nitter")
+
+    #2. Vivino rewiews and wishlists
+    yield runner.crawl('parse_vivino_listing')
+
+    #TODO add here the vivino source data
 
     reactor.stop()
 

@@ -12,7 +12,7 @@ from scrapy.exceptions import DropItem
 class AvakusPipeline:
     def process_item(self, item, spider):
         match item:
-            case Item(name="wishlist_item" | "review_item"):
+            case Item(name="wishlist_item" | "review_item" | "tweet_item" | "tweet_profile_item"):
                 item.process_item()
             case _:
                 raise DropItem(f"Such item does not exist! Dropping {item=}")

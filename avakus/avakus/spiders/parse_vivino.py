@@ -18,7 +18,7 @@ from avakus.items import (
 
 
 class VivinoListing(Spider):
-    name = 'vivino_listing'
+    name = 'parse_vivino_listing'
     custom_settings = {
         "HTTPERROR_ALLOWED_CODES": [
             403,
