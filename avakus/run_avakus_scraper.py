@@ -9,12 +9,13 @@ def run_scraping(
     runner: CrawlerRunner,
 ):
     #1. Tweets and statistics
-    yield runner.crawl("parse_nitter")
+    yield runner.crawl("scrape_nitter_tweets")
 
-    #2. Vivino rewiews and wishlists
-    yield runner.crawl('parse_vivino_listing')
+    #2. Vivino rewiews
+    yield runner.crawl('scrape_vivino_reviews')
 
-    #TODO add here the vivino source data
+    #3. Vivino wishlists
+    yield runner.crawl('scrape_vivino_wishlist')
 
     reactor.stop()
 

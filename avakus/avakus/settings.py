@@ -6,7 +6,9 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+from datetime import datetime
 
+DATE_FILE_USE = datetime.utcnow().strftime("%Y-%m-%d-%H-%M")
 BOT_NAME = 'avakus'
 LOG_LEVEL = 'INFO' 
 

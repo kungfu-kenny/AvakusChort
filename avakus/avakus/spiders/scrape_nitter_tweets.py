@@ -11,13 +11,14 @@ from utils.selenium_webdriver import (
     WebDriverWait,
 )
 from avakus.items import (
+    get_cmp_ids,
     TweetItem,
     TweetProfileItem,    
 )
 
 
 class NitterParser(Spider):
-    name = 'parse_nitter'
+    name = 'scrape_nitter_tweets'
 
     def start_requests(self):
         yield Request(
@@ -87,11 +88,15 @@ class NitterParser(Spider):
         return False, None
 
     def parse(self, response):
+        list_tweets = get_cmp_ids(TweetItem.file_path, 'post_id')
         with Driver(url=response.request.url) as driver:
             next_page = True
             while next_page:
                 for post in self.select_posts(driver):
-                    if not post.get("post_id"):
+                    if (
+                        not post.get("post_id") or
+                        post.get("post_id") in list_tweets
+                    ):
                         continue
                     yield TweetItem(
                         post_id = post.get("post_id"),

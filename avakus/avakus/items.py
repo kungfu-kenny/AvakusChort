@@ -35,14 +35,14 @@ def get_cmp_id(file_path:str, key:str, search:int) -> bool:
                 presence = True
     return presence
 
-def get_cmp_ids(file_path:str) -> list:
+def get_cmp_ids(file_path:str, type_check:str='review_id') -> list:
     ids = []
     if not os.path.exists(file_path):
         return ids
     with open(file_path, 'r') as file_json:
         data = json.load(file_json)
         for review in data:
-            ids.append(review.get("review_id"))
+            ids.append(review.get(type_check))
     return ids
 
 
